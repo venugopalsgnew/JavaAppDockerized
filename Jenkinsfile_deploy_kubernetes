@@ -87,7 +87,7 @@ pipeline {
             }
         }
 
-        stage('Deploy updated manifest to') {
+        stage('Deploy updated manifest to k8 Cluster') {
             steps {
                 script {
                   kubeconfig(credentialsId: 'KUBE_CONFIG', serverUrl: 'https://172.31.33.136:6443') {
