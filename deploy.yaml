@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-app-deployment
+  name: my-deployment
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: my-app
@@ -13,7 +13,7 @@ spec:
         app: my-app
     spec:
       containers:
-        - name: my-app-container
-          image: 287489840086.dkr.ecr.ap-southeast-1.amazonaws.com/ecr_repo:51
-          ports:
-            - containerPort: 8080
+      - name: my-container
+        image: <ECR_REGISTRY>/<IMAGE_NAME>:<TAG>
+      imagePullSecrets:
+        - name: ecr-registry
