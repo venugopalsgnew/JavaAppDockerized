@@ -35,7 +35,7 @@ kubectl get secret -- we can verify secret name
 
 **deploy.yaml**
 
-
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
