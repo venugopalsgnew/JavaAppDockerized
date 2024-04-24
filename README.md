@@ -34,6 +34,8 @@ Reference Secret in Deployment: In your deployment YAML file, reference the Kube
 kubectl get secret -- we can verify secret name 
 
 **deploy.yaml**
+
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -53,6 +55,8 @@ spec:
         image: <ECR_REGISTRY>/<IMAGE_NAME>:<TAG>
       imagePullSecrets:
         - name: ecr-registry
+
+        
 Replace <ECR_REGISTRY> with your ECR registry URL, <IMAGE_NAME> with the name of your Docker image, and <TAG> with the desired tag.
 With these steps, your Kubernetes cluster will be authenticated to pull images from AWS ECR using the provided credentials. Make sure to keep your credentials secure and rotate them regularly for security best practices.
 
