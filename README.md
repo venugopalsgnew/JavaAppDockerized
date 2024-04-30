@@ -102,3 +102,42 @@ spec:
 Replace <ECR_REGISTRY> with your ECR registry URL, <IMAGE_NAME> with the name of your Docker image, and <TAG> with the desired tag.
 With these steps, your Kubernetes cluster will be authenticated to pull images from AWS ECR using the provided credentials. Make sure to keep your credentials secure and rotate them regularly for security best practices.
 
+
+**for minikube aws ecr privaterepo below is the process**
+aws push command
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 288214676350.dkr.ecr.ap-south-1.amazonaws.com
+
+
+#Run this command, it will generate a password
+aws ecr get-login-password --region ap-south-1
+
+#login to mikube cluster by running the below command
+
+minikube ssh
+
+docker login --username AWS -p <copy the password generated in step 1> 288214676350.dkr.ecr.ap-south-1.amazonaws.com
+
+ls -a
+cd .docker
+ls
+cat config.json
+copy the conent and replace config.json file that you can find in C:\Users\venug.docker
+
+
+kubectl create secret generic my-registry-key --from-file=.dockerconfigjson=C:\Users\venug\.docker\config.json --type=kubernetes.io/dockerconfigjson
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
