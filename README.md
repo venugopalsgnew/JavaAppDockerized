@@ -1,9 +1,13 @@
 **How to make docker image is private**
 
 docker pull nginx
+
 docker tag nginx venugopal87/nginx:1.777
+
 docker login
+
 docker push venugopal87/nginx:1.777
+
 Selec the Image, Go to Settings ->  Click on Private 
 
 With the free plan, you can create an unlimited number of public repositories and one private repository. If you need more private repositories, you would need to subscribe to one of Docker Hub's paid plans, such as the Pro or Team plans, which offer more features and allow you to create multiple private repositories.
