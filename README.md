@@ -1,4 +1,5 @@
 **How to make docker image is private**
+
 docker pull nginx
 docker tag nginx venugopal87/nginx:1.777
 docker login
