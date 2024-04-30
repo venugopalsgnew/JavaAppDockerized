@@ -1,4 +1,4 @@
-** Pull private Image from DockerHub (private image) **
+**Pull private Image from DockerHub (private image)**
 
 On k8 cluster, create a k8 secret which is pointing to Dockerhub account
 
