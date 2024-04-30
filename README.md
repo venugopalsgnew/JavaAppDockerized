@@ -5,7 +5,7 @@ On k8 cluster, create a k8 secret which is pointing to Dockerhub account
 kubectl create secret docker-registry demo --docker-server=https://index.docker.io/v1/ --docker-username=venugopal87 --docker-password=password --docker-email=venugopal.aix@gmail.com
 
 Here : demo ( refers the name of the secret ) 
---docker-password= ( dockerhub account password)
+--docker-password= ( dockerhub account password)  -- Change the password based on your GitHub account
 
 kubectl get secrets
 
