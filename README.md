@@ -1,4 +1,22 @@
+** Pull private Image from DockerHub (private image) **
 
+On k8 cluster, create a k8 secret which is pointing to Dockerhub account
+
+kubectl create secret docker-registry demo --docker-server=https://index.docker.io/v1/ --docker-username=venugopal87 --docker-password=password --docker-email=venugopal.aix@gmail.com
+
+Here : demo ( refers the name of the secret ) 
+--docker-password= ( dockerhub account password)
+
+kubectl get secrets
+
+and in the deployment.yaml file we should specify below content ...
+
+   imagePullSecrets:
+        - name: demo
+
+
+================================================================================
+** Pull private Image from AWS ECR ( Elastic Container Registry) (private image) **
 
 **How to make authenticate my k8 cluster with AWS ECR registry**
 
