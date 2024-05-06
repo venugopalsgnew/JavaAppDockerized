@@ -91,7 +91,10 @@ pipeline {
             steps {
                 script {
                   kubeconfig(credentialsId: 'KUBE_CONFIG', serverUrl: 'https://172.31.33.0:6443') {
-                    sh 'kubectl apply -f deploy.yaml'
+                    sh '''
+                      kubectl apply -f deploy.yaml
+                      kubectl apply -f service.yaml
+                    '''
                 }
 
                 }
