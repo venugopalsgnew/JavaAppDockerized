@@ -1,0 +1,111 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven'
+        // Ensure 'sonar' tool is installed globally in Jenkins
+        // This should match the name configured in Global Tool Configuration
+        // and should point to the location of the SonarQube Scanner installation
+        // Example: 'sonar' is the tool name configured in Jenkins
+    }
+
+    environment {
+        SONAR_HOST_URL = 'http://13.212.51.201:9000' // Update with your SonarQube server URL
+        SONAR_LOGIN = credentials('sonar_token') // Credentials ID for SonarQube access token
+        ECR_REGISTRY = "287489840086.dkr.ecr.ap-southeast-1.amazonaws.com/super30_ecr"
+        // Set the name of your Docker image
+        dockerImageTag = "${env.BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                // Correct syntax for Git checkout
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'GITHUB_TOKEN_Jenkins', url: 'https://github.com/venugopalsgnew/JavaAppDockerized.git']])
+            }
+        }
+
+        stage('Build') {
+            steps {
+                // Run Maven clean package
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                // Execute SonarQube scanner
+                withSonarQubeEnv('sonar') {
+                    sh "mvn sonar:sonar \
+                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                        -Dsonar.login=${SONAR_LOGIN}"
+                }
+            }
+        }
+
+        stage('Building image') {
+            steps {
+                script {
+                    dockerImage = docker.build("${ECR_REGISTRY}:${dockerImageTag}")
+                }
+            }
+        }
+
+        stage('Pushing to ECR') {
+            steps {
+                script {
+                    // Log in to ECR
+                    sh 'aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 287489840086.dkr.ecr.ap-southeast-1.amazonaws.com'
+                    // Push Docker image to ECR
+                    sh "docker push ${ECR_REGISTRY}:${dockerImageTag}"
+                }
+            }
+        }
+
+        stage('Update deployment.yaml') {
+            environment {
+               GIT_REPO_NAME = "venugopalsgnew/JavaAppDockerized.git"
+               GIT_USER_NAME = "venugopalsgnew"
+             }
+            steps {
+                withCredentials([string(credentialsId: 'git-credentials-id', variable: 'GITHUB_TOKEN')]) {
+                    sh'''
+                      git clone https://${GIT_USER_NAME}:${GITHUB_TOKEN}@github.com/${GIT_REPO_NAME}
+                      cd JavaAppDockerized
+                      pwd
+                      ls
+                      git pull
+                      sed -i \"s|${ECR_REGISTRY}:.*|${ECR_REGISTRY}:${dockerImageTag}|\" deploy.yaml
+                      pwd
+                      git config user.email "venugopal.aix@gmail.com"
+                      git config user.name "venu"
+                      git add deploy.yaml
+                      git commit -m "Update image in deploy.yaml"
+                      git push https://${GITHUB_TOKEN}@github.com/${GIT_REPO_NAME} HEAD:master
+                 '''
+                }
+            }
+        }
+
+        stage('Deploy updated manifest to k8 Cluster') {
+            steps {
+                script {
+                  kubeconfig(credentialsId: 'KUBE_CONFIG', serverUrl: 'https://172.31.33.0:6443') {
+                    sh 'kubectl apply -f deploy.yaml'
+                }
+
+                }
+
+            }
+
+        } 
+
+    }
+
+    post {
+        always {
+            // Clean up workspace after the build
+            cleanWs()
+        }
+    }
+}
