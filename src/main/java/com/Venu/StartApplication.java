@@ -1,4 +1,4 @@
-package com.venu;
+package com.Venu;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
