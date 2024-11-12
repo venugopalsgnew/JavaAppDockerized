@@ -3,9 +3,13 @@ For Artifact Version enable we need to put following command in jenkins pipeline
 
 
 stage('Build') {
+
     steps {
+    
         sh "mvn versions:set -DnewVersion=1.0.${BUILD_NUMBER} && mvn clean package"
+        
     }
+    
 }
 
 ========================================================================================
