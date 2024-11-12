@@ -25,7 +25,7 @@ pipeline {
                 // Run Maven clean package
                 sh 'ls'
                 sh 'pwd'
-                sh 'mvn clean package'
+                sh "mvn versions:set -DnewVersion=1.0.${BUILD_NUMBER} && mvn clean package"
             }
         }
         
