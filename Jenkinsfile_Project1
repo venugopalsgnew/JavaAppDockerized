@@ -1,0 +1,90 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven'
+    }
+
+    environment {
+        SONAR_HOST_URL = 'http://54.167.238.4:9000'
+        SONAR_LOGIN = credentials('sonar-token')
+        ECR_REGISTRY = "248189914395.dkr.ecr.us-east-1.amazonaws.com/myecr"
+        dockerImageTag = "${env.BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'GITHUB_TOKEN_Jenkins', url: 'https://github.com/venugopalsgnew/JavaAppDockerized.git']])
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar') {
+                    sh "mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_LOGIN}"
+                }
+            }
+        }
+
+        stage('Building image') {
+            steps {
+                script {
+                    dockerImage = docker.build("${ECR_REGISTRY}:${dockerImageTag}")
+                }
+            }
+        }
+
+        stage('Pushing to ECR') {
+            steps {
+                script {
+                    sh 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 248189914395.dkr.ecr.us-east-1.amazonaws.com'
+                    sh "docker push ${ECR_REGISTRY}:${dockerImageTag}"
+                }
+            }
+        }
+
+        stage('Update deployment.yaml') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'GITHUB_TOKEN_Jenkins', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                    sh '''
+                      git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/venugopalsgnew/JavaAppDockerized.git
+                      cd JavaAppDockerized
+                      git pull
+                      sed -i "s|image: ${ECR_REGISTRY}:.*|image: ${ECR_REGISTRY}:${dockerImageTag}|g" deploy.yaml
+                      git config user.email "venugopal.aix@gmail.com"
+                      git config user.name "venu"
+                      git add deploy.yaml
+                      git commit -m "Update image in deploy.yaml"
+                      git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/venugopalsgnew/JavaAppDockerized.git HEAD:master
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy updated manifest to K8s Cluster') {
+            steps {
+                script {
+                    kubeconfig(credentialsId: 'kube-config', serverUrl: 'https://172.31.22.23:6443') {
+                        sh '''
+                          kubectl apply -f deploy.yaml
+                          kubectl apply -f service.yaml
+                        '''
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
