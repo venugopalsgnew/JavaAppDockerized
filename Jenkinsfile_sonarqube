@@ -4,7 +4,7 @@ pipeline {
     tools {
         maven 'Maven'
     }
-    
+      
     
     environment {
         SONAR_HOST_URL = 'http://13.229.132.42:9000//' // Update with your SonarQube server URL
